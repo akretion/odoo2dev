@@ -27,7 +27,7 @@ setuptools.setup(
     install_requires=open("requirements.txt").read().splitlines(),
     entry_points=dict(console_scripts=[
         "odev=odoo2dev.main:main",
-        # "odev-plus=odoo2dev.extra:main",
+        "odev+=odoo2dev.extra:main",
     ]),
     keywords=[
         "Odoo", "Development", "ERP", "Module", "Security"

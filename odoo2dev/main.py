@@ -1,17 +1,29 @@
 #!/usr/bin/env python
 
-import logging
+from psycopg2 import ProgrammingError
 import click
 import click_odoo
 from click_odoo import odoo
 
-logger = logging.getLogger(__name__)
-
 
 def inactive_cron(env):
-    # TODO make sure than ir_cron exists
-    env.cr.execute("UPDATE ir_cron SET active = 'f'")
-    logger.info("ERP crons inactivated")
+    try:
+        env.cr.execute("UPDATE ir_cron SET active = 'f'")
+        click.echo(click.style("ERP crons inactivated", fg="green"))
+    except ProgrammingError as e:
+        msg = "Probably no ir_cron table in this database"
+        click.echo(click.style(msg, fg="red"))
+        raise e
+    except Exception as e:
+        raise e
+
+
+def inactive_mail(env):
+    try:
+        env.cr.execute("UPDATE ir_mail_server SET active = 'f'")
+        click.echo(click.style("ERP outgoing mail are inactivated", fg="green"))
+    except Exception as e:
+        raise e
 
 
 @click.command()
@@ -29,7 +41,9 @@ def main(env, if_exists):
             return
         else:
             raise click.ClickException(msg)
+    click.echo("On database '%s':" % env.cr.dbname)
     inactive_cron(env)
+    inactive_mail(env)
 
 
 if __name__ == "__main__":  # pragma: no cover
