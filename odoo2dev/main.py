@@ -75,6 +75,12 @@ def _check_database(env, if_exists):
     "--if-exists", is_flag=True, help="Don't report error if database doesn't exist"
 )
 def main(env, if_exists):
+    """ Features:
+\n - inactive crons and outgoings mail
+\n - install list of modules coming from ``ODEV_INSTALL`` env var (comma separated)
+\n - uninstall list of modules coming from ``ODEV_UNINSTALL`` env var (comma separated)
+\n - reset users password to ``admin`` when ``ODEV_RESET_PASSWORD`` var is set to True
+    """
     _check_database(env, if_exists)
     click.echo("Operations on database '%s':" % env.cr.dbname)
     inactive_cron(env)

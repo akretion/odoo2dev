@@ -37,6 +37,10 @@ def favicon(env):
     "--if-exists", is_flag=True, help="Don't report error if database doesn't exist"
 )
 def main(env, if_exists):
+    """ Features:
+\n - install ``web_favicon`` to make your instance with a different look and feel:
+  set path in ``ODEV_LOGO_PATH`` env var and put a file named 'dev.png' in this place
+    """
     # TODO call main.main() before that
     _check_database(env, if_exists)
     click.echo("On database '%s':" % env.cr.dbname)
