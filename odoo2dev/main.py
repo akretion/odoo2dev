@@ -1,9 +1,29 @@
 #!/usr/bin/env python
 
 from psycopg2 import ProgrammingError
+import os
 import click
 import click_odoo
 from click_odoo import odoo
+from click_odoo_contrib.uninstall import uninstall
+
+
+def reset_password(env):
+    reset = os.environ.get("ODEV_RESET_PASSWORD")
+    if reset:
+        env.cr.execute("UPDATE res_users SET password = 'admin'")
+        click.echo(click.style("ERP user's password are reset", fg="green"))
+
+
+def install_uninstall(env):
+    # TODO improve according to module state
+    modules_to_install = os.environ.get("ODEV_INSTALL")
+    modules_to_uninstall = os.environ.get("ODEV_UNINSTALL")
+    if modules_to_uninstall:
+        uninstall(env, _get_module_names(modules_to_uninstall))
+        click.echo(click.style("Modules '%s' uninstalled" % modules_to_uninstall, fg="green"))
+    if modules_to_install:
+        _install_modules(env, modules_to_install)
 
 
 def inactive_cron(env):
@@ -26,6 +46,17 @@ def inactive_mail(env):
         raise e
 
 
+def _get_module_names(modules):
+    return [m.strip() for m in modules.split(",")]
+
+
+def _install_modules(env, modules):
+    addons = env["ir.module.module"].search([("name", "in", _get_module_names(modules))])
+    addons.button_immediate_install()
+    env.cr.commit()
+    click.echo(click.style("Modules '%s' installed" % modules, fg="green"))
+
+
 @click.command()
 @click_odoo.env_options(
     default_log_level="warn", with_database=True, with_rollback=False
@@ -44,6 +75,8 @@ def main(env, if_exists):
     click.echo("On database '%s':" % env.cr.dbname)
     inactive_cron(env)
     inactive_mail(env)
+    install_uninstall(env)
+    reset_password(env)
 
 
 if __name__ == "__main__":  # pragma: no cover

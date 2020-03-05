@@ -12,15 +12,30 @@
 odoo2dev
 ========
 
-``odoo2dev`` is a python3/2 package providing facilities to use a dump of your production in 
-your dev environment.
+``odoo2dev`` is a python3/2 package providing facilities to use a dump of your production in your dev environment.
 
-You may install install this lib in your project with ``pip install git+https://github.com/akretion/odoo2dev.git#egg=odoo2dev``.
+You may install this lib in your project with 
+
+``pip install git+https://github.com/akretion/odoo2dev.git#egg=odoo2dev``.
 
 Features
+========
+
+Features are triggered by these shell entrypoints:
+
+
+``odev``
 --------
 
-2 entry points allowing to:
+- inactive crons and outgoing mail
+- install list of modules coming from env var ``ODEV_INSTALL`` (comma separated)
+- uninstall list of modules coming from env var ``ODEV_UNINSTALL`` (comma separated)
+- reset users password to ``admin`` when ``ODEV_RESET_PASSWORD`` is set to True
 
-- ``odev`` to inactive crons and outgoing mail
-- ``odev+`` for extra features like install web_favicon to make your instance with a different look and feel and more to come.
+
+``odev+``
+---------
+
+Some extra features here (more to come):
+
+- install ``web_favicon`` to make your instance with a different look and feel.

@@ -1,1 +1,1 @@
-click-odoo>=1.3.0
+click-odoo-contrib
