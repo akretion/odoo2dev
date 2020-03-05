@@ -6,11 +6,14 @@ import base64
 import click
 import click_odoo
 from click_odoo import odoo
-from odoo.tools import config
+
+from .main import _check_database
 
 
 def favicon(env):
-    logo = '/templates/%s.png' % config.get("running_env")
+    path = os.environ.get("ODEV_LOGO_PATH") or "/templates/"
+    file = "%s.png" % odoo.tools.config.get("running_env")
+    logo = os.path.join(path, file)
     if os.path.isfile(logo):
         with open(logo, 'rb') as file:
             module = env["ir.module.module"].search(
@@ -23,7 +26,8 @@ def favicon(env):
                     'favicon_backend_mimetype': 'image/png'})
         click.echo(click.style("Favicon added to companies", fg="green"))
     else:
-        click.echo(click.style("No logo file in /templates according to your environment", fg="yellow"))
+        message = "No logo file '%s' to be added to favicon. You may use ODEV_LOGO_PATH."
+        click.echo(click.style(message % logo, fg="yellow"))
 
 @click.command()
 @click_odoo.env_options(
@@ -33,13 +37,8 @@ def favicon(env):
     "--if-exists", is_flag=True, help="Don't report error if database doesn't exist"
 )
 def main(env, if_exists):
-    if not env:
-        msg = "Database does not exist"
-        if if_exists:
-            click.echo(click.style(msg, fg="yellow"))
-            return
-        else:
-            raise click.ClickException(msg)
+    # TODO call main.main() before that
+    _check_database(env, if_exists)
     click.echo("On database '%s':" % env.cr.dbname)
     favicon(env)
 

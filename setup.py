@@ -10,7 +10,7 @@ setuptools.setup(
     author="Akretion",
     author_email="contact@akretion.com",
     license="AGPLv3+",
-    description="Make your production odoo db dev ready",
+    description="Make your production odoo db copy dev ready",
     long_description=open("README.rst").read(),
     long_description_content_type="text/x-rst",
     url="https://github.com/akretion/odoo2dev",

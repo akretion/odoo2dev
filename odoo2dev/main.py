@@ -57,6 +57,16 @@ def _install_modules(env, modules):
     click.echo(click.style("Modules '%s' installed" % modules, fg="green"))
 
 
+def _check_database(env, if_exists):
+    if not env:
+        msg = "Database does not exist"
+        if if_exists:
+            click.echo(click.style(msg, fg="yellow"))
+            return
+        else:
+            raise click.ClickException(msg)
+
+
 @click.command()
 @click_odoo.env_options(
     default_log_level="warn", with_database=True, with_rollback=False
@@ -65,14 +75,8 @@ def _install_modules(env, modules):
     "--if-exists", is_flag=True, help="Don't report error if database doesn't exist"
 )
 def main(env, if_exists):
-    if not env:
-        msg = "Database does not exist"
-        if if_exists:
-            click.echo(click.style(msg, fg="yellow"))
-            return
-        else:
-            raise click.ClickException(msg)
-    click.echo("On database '%s':" % env.cr.dbname)
+    _check_database(env, if_exists)
+    click.echo("Operations on database '%s':" % env.cr.dbname)
     inactive_cron(env)
     inactive_mail(env)
     install_uninstall(env)
