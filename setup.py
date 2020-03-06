@@ -3,10 +3,12 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 from setuptools import find_packages
+import setuptools
+
 
 setuptools.setup(
     name="odoo2dev",
-    version="0.1.0",
+    version="0.1.1",
     author="Akretion",
     author_email="contact@akretion.com",
     license="AGPLv3+",
@@ -27,7 +29,6 @@ setuptools.setup(
     install_requires=open("requirements.txt").read().splitlines(),
     entry_points=dict(console_scripts=[
         "odev=odoo2dev.main:main",
-        "odev+=odoo2dev.extra:main",
     ]),
     keywords=[
         "Odoo", "Development", "ERP", "Module", "Security"

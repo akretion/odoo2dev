@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
-from psycopg2 import ProgrammingError
-import os
+import base64
 import click
 import click_odoo
 from click_odoo import odoo
 from click_odoo_contrib.uninstall import uninstall
+import os
+from psycopg2 import ProgrammingError
 
 
 def reset_password(env):
@@ -21,7 +22,8 @@ def install_uninstall(env):
     modules_to_uninstall = os.environ.get("ODEV_UNINSTALL")
     if modules_to_uninstall:
         uninstall(env, _get_module_names(modules_to_uninstall))
-        click.echo(click.style("Modules '%s' uninstalled" % modules_to_uninstall, fg="green"))
+        click.echo(click.style(
+            "Modules '%s' uninstalled" % modules_to_uninstall, fg="green"))
     if modules_to_install:
         _install_modules(env, modules_to_install)
 
@@ -46,47 +48,62 @@ def inactive_mail(env):
         raise e
 
 
+def favicon(env):
+    path = os.environ.get("ODEV_LOGO_PATH") or "/templates/"
+    file = "%s.png" % odoo.tools.config.get("running_env")
+    logo = os.path.join(path, file)
+    if os.path.isfile(logo):
+        with open(logo, 'rb') as file:
+            module = env["ir.module.module"].search([
+                ("name", "=", "web_favicon"),
+                ("state", "in", ["to install", "installed"])])
+            if module:
+                if module.state == "to install":
+                    module.button_immediate_install()
+                env["res.company"].search([]).write({
+                    "favicon_backend": base64.b64encode(file.read()),
+                    "favicon_backend_mimetype": "image/png"})
+        click.echo(click.style("Favicon added to companies", fg="green"))
+
+
 def _get_module_names(modules):
     return [m.strip() for m in modules.split(",")]
 
 
 def _install_modules(env, modules):
-    addons = env["ir.module.module"].search([("name", "in", _get_module_names(modules))])
+    addons = env["ir.module.module"].search(
+        [("name", "in", _get_module_names(modules))])
     addons.button_immediate_install()
     env.cr.commit()
     click.echo(click.style("Modules '%s' installed" % modules, fg="green"))
 
 
-def _check_database(env, if_exists):
+def _check_database(env):
     if not env:
         msg = "Database does not exist"
-        if if_exists:
-            click.echo(click.style(msg, fg="yellow"))
-            return
-        else:
-            raise click.ClickException(msg)
+        raise click.ClickException(msg)
 
 
 @click.command()
 @click_odoo.env_options(
     default_log_level="warn", with_database=True, with_rollback=False
 )
-@click.option(
-    "--if-exists", is_flag=True, help="Don't report error if database doesn't exist"
-)
-def main(env, if_exists):
+def main(env):
     """ Features:
 \n - inactive crons and outgoings mail
 \n - install list of modules coming from ``ODEV_INSTALL`` env var (comma separated)
 \n - uninstall list of modules coming from ``ODEV_UNINSTALL`` env var (comma separated)
 \n - reset users password to ``admin`` when ``ODEV_RESET_PASSWORD`` var is set to True
+\n - install ``web_favicon`` to make your instance with a different look and
+feel (``ODEV_LOGO_PATH`` env var with file named 'dev.png' inside active this feature)
     """
-    _check_database(env, if_exists)
+    _check_database(env)
     click.echo("Operations on database '%s':" % env.cr.dbname)
     inactive_cron(env)
     inactive_mail(env)
     install_uninstall(env)
     reset_password(env)
+    favicon(env)
 
 
 if __name__ == "__main__":  # pragma: no cover
