@@ -54,15 +54,10 @@ def favicon(env):
     logo = os.path.join(path, file)
     if os.path.isfile(logo):
         with open(logo, 'rb') as file:
-            module = env["ir.module.module"].search([
-                ("name", "=", "web_favicon"),
-                ("state", "in", ["to install", "installed"])])
-            if module:
-                if module.state == "to install":
-                    module.button_immediate_install()
-                env["res.company"].search([]).write({
-                    "favicon_backend": base64.b64encode(file.read()),
-                    "favicon_backend_mimetype": "image/png"})
+            _install_modules(env, "web_favicon")
+            env["res.company"].search([]).write({
+                "favicon_backend": base64.b64encode(file.read()),
+                "favicon_backend_mimetype": "image/png"})
         click.echo(click.style("Favicon added to companies", fg="green"))
 
 
@@ -74,7 +69,6 @@ def _install_modules(env, modules):
     addons = env["ir.module.module"].search(
         [("name", "in", _get_module_names(modules))])
     addons.button_immediate_install()
-    env.cr.commit()
     click.echo(click.style("Modules '%s' installed" % modules, fg="green"))
 
 
