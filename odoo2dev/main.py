@@ -4,7 +4,6 @@ import base64
 import click
 import click_odoo
 from click_odoo import odoo
-from click_odoo_contrib.uninstall import uninstall
 import os
 from psycopg2 import ProgrammingError
 
@@ -55,8 +54,6 @@ def favicon(env):
     if os.path.isfile(logo):
         with open(logo, 'rb') as file:
             _install_modules(env, "web_favicon")
-            print("STATUT", env["ir.module.module"].search(
-                [("name", "=", "web_favicon")], limit=1).state)
             env.cr.commit()
             if "favicon" in env["res.company"]._fields.keys():
                 # Still a bug there: I don't know why these fields
@@ -73,6 +70,13 @@ def favicon(env):
 
 def _get_module_names(modules):
     return [m.strip() for m in modules.split(",")]
+
+
+def uninstall(env, module_names):
+    modules = env["ir.module.module"].search([("name", "in", module_names)])
+    modules.button_immediate_uninstall()
+    click.echo(click.style(
+        "Uninstall modules '%s'" % modules.mapped("name"), fg="green"))
 
 
 def _install_modules(env, modules):
