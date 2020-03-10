@@ -55,10 +55,20 @@ def favicon(env):
     if os.path.isfile(logo):
         with open(logo, 'rb') as file:
             _install_modules(env, "web_favicon")
-            env["res.company"].search([]).write({
-                "favicon_backend": base64.b64encode(file.read()),
-                "favicon_backend_mimetype": "image/png"})
-        click.echo(click.style("Favicon added to companies", fg="green"))
+            print("STATUT", env["ir.module.module"].search(
+                [("name", "=", "web_favicon")], limit=1).state)
+            env.cr.commit()
+            if "favicon" in env["res.company"]._fields.keys():
+                # Still a bug there: I don't know why these fields
+                # are unknown at this step
+                env["res.company"].search([]).write({
+                    "favicon_backend": base64.b64encode(file.read()),
+                    "favicon_backend_mimetype": "image/png"})
+                click.echo(click.style(
+                    "Favicon added to companies", fg="green"))
+            else:
+                click.echo(click.style(
+                    "Unknown field favicon_backend: unable to write", fg="red"))
 
 
 def _get_module_names(modules):
@@ -98,6 +108,7 @@ feel (``ODEV_LOGO_PATH`` env var with file named 'dev.png' inside active this fe
     install_uninstall(env)
     reset_password(env)
     favicon(env)
+    env.cr.commit()
 
 
 if __name__ == "__main__":  # pragma: no cover
