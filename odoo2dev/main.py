@@ -56,6 +56,8 @@ def set_favicon(env):
                 favicon_backend_mimetype = 'image/png'""", (data,))
         click.echo(click.style(
             "Favicon added to companies", fg="green"))
+    else:
+        click.echo(click.style("No favicon file", fg="blue"))
 
 
 def _get_favicon_data(env):
