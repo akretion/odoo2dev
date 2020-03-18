@@ -20,7 +20,7 @@ def install_uninstall(env):
     modules_to_install = os.environ.get("ODEV_INSTALL")
     modules_to_uninstall = os.environ.get("ODEV_UNINSTALL")
     if modules_to_uninstall:
-        uninstall(env, _get_module_names(modules_to_uninstall))
+        _uninstall(env, _get_module_names(modules_to_uninstall))
         click.echo(click.style(
             "Modules '%s' uninstalled" % modules_to_uninstall, fg="green"))
     if modules_to_install:
@@ -47,43 +47,47 @@ def inactive_mail(env):
         raise e
 
 
-def favicon(env):
+def set_favicon(env):
+    data = _get_favicon_data(env)
+    if data:
+        env.cr.execute("""
+            UPDATE res_company
+            SET favicon_backend = %s,
+                favicon_backend_mimetype = 'image/png'""", (data,))
+        click.echo(click.style(
+            "Favicon added to companies", fg="green"))
+
+
+def _get_favicon_data(env):
+    _install_modules(env, "web_favicon")
     path = os.environ.get("ODEV_LOGO_PATH") or "/templates/"
     file = "%s.png" % odoo.tools.config.get("running_env")
     logo = os.path.join(path, file)
     if os.path.isfile(logo):
         with open(logo, 'rb') as file:
-            _install_modules(env, "web_favicon")
-            env.cr.commit()
-            if "favicon" in env["res.company"]._fields.keys():
-                # Still a bug there: I don't know why these fields
-                # are unknown at this step
-                env["res.company"].search([]).write({
-                    "favicon_backend": base64.b64encode(file.read()),
-                    "favicon_backend_mimetype": "image/png"})
-                click.echo(click.style(
-                    "Favicon added to companies", fg="green"))
-            else:
-                click.echo(click.style(
-                    "Unknown field favicon_backend: unable to write", fg="red"))
+            return base64.b64encode(file.read())
 
 
 def _get_module_names(modules):
     return [m.strip() for m in modules.split(",")]
 
 
-def uninstall(env, module_names):
-    modules = env["ir.module.module"].search([("name", "in", module_names)])
-    modules.button_immediate_uninstall()
+def _uninstall(env, module_names):
+    addons = env["ir.module.module"].search([("name", "in", module_names)])
+    addons.button_immediate_uninstall()
+    module_states = {x.name: x.state for x in addons}
     click.echo(click.style(
-        "Uninstall modules '%s'" % modules.mapped("name"), fg="green"))
+        "Uninstallation module state '%s'" % module_states, fg="green"))
 
 
 def _install_modules(env, modules):
     addons = env["ir.module.module"].search(
         [("name", "in", _get_module_names(modules))])
     addons.button_immediate_install()
-    click.echo(click.style("Modules '%s' installed" % modules, fg="green"))
+    module_states = {x.name: x.state for x in addons}
+    click.echo(click.style(
+        "Installation: modules states '%s'" % module_states, fg="green"))
+    env.cr.commit()
 
 
 def _check_database(env):
@@ -97,13 +101,7 @@ def _check_database(env):
     default_log_level="warn", with_database=True, with_rollback=False
 )
 def main(env):
-    """ Features:
-\n - inactive crons and outgoings mail
-\n - install list of modules coming from ``ODEV_INSTALL`` env var (comma separated)
-\n - uninstall list of modules coming from ``ODEV_UNINSTALL`` env var (comma separated)
-\n - reset users password to ``admin`` when ``ODEV_RESET_PASSWORD`` var is set to True
-\n - install ``web_favicon`` to make your instance with a different look and
-feel (``ODEV_LOGO_PATH`` env var with file named 'dev.png' inside active this feature)
+    """ each function names are self explained
     """
     _check_database(env)
     click.echo("Operations on database '%s':" % env.cr.dbname)
@@ -111,7 +109,7 @@ feel (``ODEV_LOGO_PATH`` env var with file named 'dev.png' inside active this fe
     inactive_mail(env)
     install_uninstall(env)
     reset_password(env)
-    favicon(env)
+    set_favicon(env)
     env.cr.commit()
 
 

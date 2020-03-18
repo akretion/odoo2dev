@@ -61,7 +61,7 @@ Usage
 
 - fill you server environment or your docker-compose file with the choosen keys:
 
-.. code::
+.. code-block:: yaml
 
   - ODEV_INSTALL=web_environment_ribbon,my_other_module
   - ODEV_UNINSTALL=module_for_prod_only,my_useless_module
@@ -72,7 +72,7 @@ Usage
 
 .. code-block:: bash
 
-  pg_restore -d my_db my.dump ; odev ; odoo
+  pg_restore -d my_db my.dump ; odev -d my_db ; odoo
 
 
 Roadmap / Limitations
@@ -81,6 +81,7 @@ Roadmap / Limitations
 - odoo2dev doesn't ensure than modules to install or uninstall are available on addons path before launch the command.
 - if required base tables are not available in called database (``ir_mail_server``, ``res_users``, etc) errors can be triggered (example with a not odoo db).
 - for any project you need to execute specific script to complete **odev** work, then support for additional script will be added at the end of the execution.
+- other versions than even ones could works but not tested until now
 
 
 Credits
