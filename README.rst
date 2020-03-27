@@ -16,20 +16,57 @@ odoo2dev
 
 
 **odoo2dev** is a python3/2 package providing facilities to use a dump of your production in your dev environment.
-
+It builds on top of `click-odoo <https://github.com/acsone/click-odoo>`__.
+The motivations for this library is to handle redundant operations in a simple and convenient way.
 
 Features
 --------
 
-Features are triggered by this shell entrypoint: **odev**
+The following operations are executed:
 
-- inactive crons and outgoings mail
-- install list of modules if provided with server env var.
-- uninstall list of modules if provided with server env var.
-- reset users password to ``admin`` when **ODEV_RESET_PASSWORD** var is set to True.
-- install **web_favicon** to make your instance with a different look and feel (**ODEV_LOGO_PATH** env var with file named ``dev.png`` inside active this feature)
+Always:
+  - deactivate crons and outgoing mails
 
-Options:
+Optionally and depending on the inputs:
+  - ODEV_INSTALL: comma-separated list of modules to install
+  - ODEV_UNINSTALL: comma-separated list of modules to uninstall
+  - ODEV_RESET_PASSWORD: boolean flag to reset password to default 'admin'
+  - ODEV_LOGO_PATH: path to the logo (favicon) that should be used
+
+Inputs are supplied through setting your environment variables.
+
+Install
+-------
+
+Install this lib in your project with
+
+``pip install git+https://github.com/akretion/odoo2dev.git@master#egg=odoo2dev``
+
+
+**odoo2dev** relies on the excellent
+`click-odoo <https://github.com/acsone/click-odoo>`__
+
+
+Usage
+-----
+
+- Set environment variables, for example on your docker-compose file, with key-value pairs:
+
+.. code-block:: yaml
+
+  - ODEV_INSTALL=web_environment_ribbon,my_other_module
+  - ODEV_UNINSTALL=module_for_prod_only,my_useless_module
+  - ODEV_RESET_PASSWORD=True
+  - ODEV_LOGO_PATH=/my_own_path
+
+- Execute odoo2click through **odev** command when needed, typically after database restore, i.e.:
+
+.. code-block:: bash
+
+  pg_restore -d my_db my.dump ; odev -d my_db ; odoo
+
+
+Command-line options:
   -c, --config FILE    Specify the Odoo configuration file. Other ways to
                        provide it are with the ODOO_RC or OPENERP_SERVER
                        environment variables, or ~/.odoorc (Odoo >= 10) or
@@ -42,37 +79,6 @@ Options:
                        [default: warn]
   --logfile FILE       Specify the log file.
   --help               Show this message and exit.
-
-
-Install
--------
-
-Install this lib in your project with
-
-``pip install git+https://github.com/akretion/odoo2dev.git@master#egg=odoo2dev``.
-
-
-**odoo2dev** relies on the excellent
-`click-odoo <https://github.com/acsone/click-odoo>`__
-
-
-Usage
------
-
-- fill you server environment or your docker-compose file with the choosen keys:
-
-.. code-block:: yaml
-
-  - ODEV_INSTALL=web_environment_ribbon,my_other_module
-  - ODEV_UNINSTALL=module_for_prod_only,my_useless_module
-  - ODEV_RESET_PASSWORD=True
-  - ODEV_LOGO_PATH=/my_own_path
-
-- when you restore you database, add **odev** cmd, i.e.:
-
-.. code-block:: bash
-
-  pg_restore -d my_db my.dump ; odev -d my_db ; odoo
 
 
 Roadmap / Limitations
