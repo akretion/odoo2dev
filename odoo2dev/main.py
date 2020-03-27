@@ -12,17 +12,15 @@ def reset_password(env):
     reset = os.environ.get("ODEV_RESET_PASSWORD")
     if reset:
         env.cr.execute("UPDATE res_users SET password = 'admin'")
-        click.echo(click.style("ERP user's password are reset", fg="green"))
+        click.echo(click.style(
+            " - user's password are reset to 'admin'", fg="green"))
 
 
 def install_uninstall(env):
-    # TODO improve according to module state
     modules_to_install = os.environ.get("ODEV_INSTALL")
     modules_to_uninstall = os.environ.get("ODEV_UNINSTALL")
     if modules_to_uninstall:
         _uninstall(env, _get_module_names(modules_to_uninstall))
-        click.echo(click.style(
-            "Modules '%s' uninstalled" % modules_to_uninstall, fg="green"))
     if modules_to_install:
         _install_modules(env, modules_to_install)
 
@@ -30,7 +28,7 @@ def install_uninstall(env):
 def inactive_cron(env):
     try:
         env.cr.execute("UPDATE ir_cron SET active = 'f'")
-        click.echo(click.style("ERP crons inactivated", fg="green"))
+        click.echo(click.style(" - crons are inactivated", fg="green"))
     except ProgrammingError as e:
         msg = "Probably no ir_cron table in this database"
         click.echo(click.style(msg, fg="red"))
@@ -42,12 +40,16 @@ def inactive_cron(env):
 def inactive_mail(env):
     try:
         env.cr.execute("UPDATE ir_mail_server SET active = 'f'")
-        click.echo(click.style("ERP outgoing mail are inactivated", fg="green"))
+        click.echo(click.style(
+            " - outgoing mail servers are inactivated", fg="green"))
     except Exception as e:
         raise e
 
 
 def set_favicon(env):
+    res = _install_modules(env, "web_favicon")
+    if "web_favicon" not in res:
+        return
     data = _get_favicon_data(env)
     if data:
         env.cr.execute("""
@@ -55,13 +57,12 @@ def set_favicon(env):
             SET favicon_backend = %s,
                 favicon_backend_mimetype = 'image/png'""", (data,))
         click.echo(click.style(
-            "Favicon added to companies", fg="green"))
+            " - Favicon added to companies", fg="green"))
     else:
         click.echo(click.style("No favicon file", fg="blue"))
 
 
 def _get_favicon_data(env):
-    _install_modules(env, "web_favicon")
     path = os.environ.get("ODEV_LOGO_PATH") or "/templates/"
     file = "%s.png" % odoo.tools.config.get("running_env")
     logo = os.path.join(path, file)
@@ -77,19 +78,35 @@ def _get_module_names(modules):
 def _uninstall(env, module_names):
     addons = env["ir.module.module"].search([("name", "in", module_names)])
     addons.button_immediate_uninstall()
-    module_states = {x.name: x.state for x in addons}
-    click.echo(click.style(
-        "Uninstallation module state '%s'" % module_states, fg="green"))
+    uninstalled = [x.name for x in addons if x.state == "uninstalled"]
+    if uninstalled:
+        click.echo(click.style(
+            " - successfull modules uninstallation %s" % uninstalled, fg="green"))
+    _check_module_state(module_names, uninstalled, operation="uninstall")
+    env.cr.commit()
+    return uninstalled
 
 
 def _install_modules(env, modules):
+    modules_list = _get_module_names(modules)
     addons = env["ir.module.module"].search(
-        [("name", "in", _get_module_names(modules))])
+        [("name", "in", modules_list)])
     addons.button_immediate_install()
-    module_states = {x.name: x.state for x in addons}
-    click.echo(click.style(
-        "Installation: modules states '%s'" % module_states, fg="green"))
+    installed = [x.name for x in addons if x.state == "installed"]
+    if installed:
+        click.echo(click.style(
+            " - successfull modules installation %s" % installed, fg="green"))
+    _check_module_state(modules_list, installed)
     env.cr.commit()
+    return installed
+
+
+def _check_module_state(modules_todo, modules_operated, operation="install"):
+    diff = set(modules_todo) - set(modules_operated)
+    if diff:
+        click.echo(click.style(
+            "Failed to '%s' these modules %s: check your addons path" % (
+                operation, list(diff)), fg="yellow"))
 
 
 def _check_database(env):
@@ -106,7 +123,7 @@ def main(env):
     """ each function names are self explained
     """
     _check_database(env)
-    click.echo("Operations on database '%s':" % env.cr.dbname)
+    click.echo("Operations on Odoo database '%s':" % env.cr.dbname)
     inactive_cron(env)
     inactive_mail(env)
     install_uninstall(env)

@@ -5,18 +5,16 @@ odoo2dev
     :target: http://www.gnu.org/licenses/agpl-3.0-standalone.html
     :alt: License: AGPL-3
 
-.. image:: https://img.shields.io/badge/python-3.6-blue.svg
-    :alt: Python support: 3.6
+.. image:: https://img.shields.io/badge/python-2.7 | 3.5+-blue.svg
+    :alt: Python support
 
-.. image:: https://img.shields.io/badge/python-2.7-blue.svg
-    :alt: Python support: 2.7
-
-.. image:: https://img.shields.io/badge/Odoo-8.0 | 10.0 | 12.0-blueviolet.svg
+.. image:: https://img.shields.io/badge/Odoo-8.0  |  10.0  |  12.0-blueviolet.svg
     :alt: Odoo
 
 
-**odoo2dev** is a python3/2 package providing facilities to use a dump of your production in your dev environment.
+**odoo2dev** is a python3/2 package providing facilities to use a dump of your production database in your dev environment.
 It builds on top of `click-odoo <https://github.com/acsone/click-odoo>`__.
+
 The motivations for this library is to handle redundant operations in a simple and convenient way.
 
 Features
@@ -64,6 +62,12 @@ Usage
 .. code-block:: bash
 
   pg_restore -d my_db my.dump ; odev -d my_db ; odoo
+
+
+Here is a result example
+
+.. figure:: /docs/output_example.png
+    :alt: output example
 
 
 Command-line options:
