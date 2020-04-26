@@ -12,8 +12,7 @@ def reset_password(env):
     reset = os.environ.get("ODEV_RESET_PASSWORD")
     if reset:
         env.cr.execute("UPDATE res_users SET password = 'admin'")
-        click.echo(click.style(
-            " - user's password are reset to 'admin'", fg="green"))
+        click.echo(click.style(" - user's password are reset to 'admin'", fg="green"))
 
 
 def install_uninstall(env):
@@ -40,8 +39,7 @@ def inactive_cron(env):
 def inactive_mail(env):
     try:
         env.cr.execute("UPDATE ir_mail_server SET active = 'f'")
-        click.echo(click.style(
-            " - outgoing mail servers are inactivated", fg="green"))
+        click.echo(click.style(" - outgoing mail servers are inactivated", fg="green"))
     except Exception as e:
         raise e
 
@@ -52,12 +50,14 @@ def set_favicon(env):
         return
     data = _get_favicon_data(env)
     if data:
-        env.cr.execute("""
+        env.cr.execute(
+            """
             UPDATE res_company
             SET favicon_backend = %s,
-                favicon_backend_mimetype = 'image/png'""", (data,))
-        click.echo(click.style(
-            " - Favicon added to companies", fg="green"))
+                favicon_backend_mimetype = 'image/png'""",
+            (data,),
+        )
+        click.echo(click.style(" - Favicon added to companies", fg="green"))
     else:
         click.echo(click.style("No favicon file", fg="blue"))
 
@@ -67,7 +67,7 @@ def _get_favicon_data(env):
     file = "%s.png" % odoo.tools.config.get("running_env")
     logo = os.path.join(path, file)
     if os.path.isfile(logo):
-        with open(logo, 'rb') as file:
+        with open(logo, "rb") as file:
             return base64.b64encode(file.read())
 
 
@@ -80,8 +80,11 @@ def _uninstall(env, module_names):
     addons.button_immediate_uninstall()
     uninstalled = [x.name for x in addons if x.state == "uninstalled"]
     if uninstalled:
-        click.echo(click.style(
-            " - successfull modules uninstallation %s" % uninstalled, fg="green"))
+        click.echo(
+            click.style(
+                " - successfull modules uninstallation %s" % uninstalled, fg="green"
+            )
+        )
     _check_module_state(module_names, uninstalled, operation="uninstall")
     env.cr.commit()
     return uninstalled
@@ -89,13 +92,15 @@ def _uninstall(env, module_names):
 
 def _install_modules(env, modules):
     modules_list = _get_module_names(modules)
-    addons = env["ir.module.module"].search(
-        [("name", "in", modules_list)])
+    addons = env["ir.module.module"].search([("name", "in", modules_list)])
     addons.button_immediate_install()
     installed = [x.name for x in addons if x.state == "installed"]
     if installed:
-        click.echo(click.style(
-            " - successfull modules installation %s" % installed, fg="green"))
+        click.echo(
+            click.style(
+                " - successfull modules installation %s" % installed, fg="green"
+            )
+        )
     _check_module_state(modules_list, installed)
     env.cr.commit()
     return installed
@@ -104,9 +109,13 @@ def _install_modules(env, modules):
 def _check_module_state(modules_todo, modules_operated, operation="install"):
     diff = set(modules_todo) - set(modules_operated)
     if diff:
-        click.echo(click.style(
-            "Failed to '%s' these modules %s: check your addons path" % (
-                operation, list(diff)), fg="yellow"))
+        click.echo(
+            click.style(
+                "Failed to '%s' these modules %s: check your addons path"
+                % (operation, list(diff)),
+                fg="yellow",
+            )
+        )
 
 
 def _check_database(env):
