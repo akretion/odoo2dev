@@ -10,20 +10,17 @@ import runpy
 from psycopg2 import ProgrammingError
 
 
-def reset_password(env):
-    reset = os.environ.get("ODEV_RESET_PASSWORD")
-    if reset:
+def reset_password(env, password):
+    if password:
         env.cr.execute("UPDATE res_users SET password = 'admin'")
         click.echo(click.style(" - user's password are reset to 'admin'", fg="green"))
 
 
-def install_uninstall(env):
-    modules_to_install = os.environ.get("ODEV_INSTALL")
-    modules_to_uninstall = os.environ.get("ODEV_UNINSTALL")
-    if modules_to_uninstall:
-        _uninstall(env, _get_module_names(modules_to_uninstall))
-    if modules_to_install:
-        _install_modules(env, modules_to_install)
+def install_uninstall(env, install, remove):
+    if remove:
+        _uninstall(env, _get_module_names(remove))
+    if install:
+        _install_modules(env, install)
 
 
 def inactive_cron(env):
@@ -62,11 +59,11 @@ def make_outgoing_mails_safe(env):
         raise e
 
 
-def set_favicon(env):
+def set_favicon(env, favicon):
     res = _install_modules(env, "web_favicon")
     if "web_favicon" not in res:
         return
-    data = _get_favicon_data(env)
+    data = _get_favicon_data(favicon)
     if data:
         env.cr.execute(
             """
@@ -80,8 +77,8 @@ def set_favicon(env):
         click.echo(click.style("No favicon file", fg="blue"))
 
 
-def _get_favicon_data(env):
-    path = os.environ.get("ODEV_LOGO_PATH") or "/templates/"
+def _get_favicon_data(favicon):
+    path = favicon or "/templates/"
     file = "%s.png" % odoo.tools.config.get("running_env")
     logo = os.path.join(path, file)
     if os.path.isfile(logo):
@@ -170,6 +167,20 @@ def _log_subprocess_output(pipe):
         click.echo(click.style(line, fg="yellow"))
 
 
+def log_deprecated():
+    " Some env var have been renamed "
+    map_ = {
+        "ODEV_RESET_PASSWORD": "ODEV_PASSWORD_RESET",
+        "ODEV_UNINSTALL": "ODEV_REMOVE",
+        "ODEV_LOGO_PATH": "ODEV_FAVICON_PATH",
+    }
+    for old, new in map_.items():
+        if os.environ.get(old):
+            msg = "Env var %s have been replaced by %s. " % (old, new)
+            msg += "Please update this var in your environment"
+            click.echo(click.style(msg, fg="red"))
+
+
 @click.command(
     help="""
 odoo2dev package providing facilities to use a dump of your production database
@@ -183,10 +194,10 @@ Always:
 
 Optionally and depending on the inputs:
 
-  - execute provided script with [SCRIPT] [SCRIPT_ARGS] as final operation \n
   - install or uninstall a comma-separated list of modules\n
   - reset password to `admin`\n
   - apply favicon on odoo instance
+  - execute provided script with [SCRIPT] [SCRIPT_ARGS] as final operation \n
 
 """
 )
@@ -195,16 +206,51 @@ Optionally and depending on the inputs:
 )
 @click.argument("script", envvar="ODEV_SCRIPT", required=False)
 @click.argument("script-args", required=False, nargs=-1)
-def main(env, script, script_args):
+@click.option(
+    "--favicon",
+    "-f",
+    envvar="ODEV_FAVICON_PATH",
+    required=False,
+    help="Apply a favicon to your Odoo instance. Require to make "
+    "available `web_favicon` module. "
+    "This is the same behavior that using ODEV_FAVICON_PATH env var",
+)
+@click.option(
+    "--install",
+    "-i",
+    envvar="ODEV_INSTALL",
+    required=False,
+    help="A comma-separated list of modules to install. "
+    "This is the same behavior that using ODEV_INSTALL env var",
+)
+@click.option(
+    "--remove",
+    "-r",
+    envvar="ODEV_REMOVE",
+    required=False,
+    help="A comma-separated list of modules to uninstall. "
+    "This is the same behavior that using ODEV_REMOVE env var",
+)
+@click.option(
+    "--password",
+    "-p",
+    envvar="ODEV_PASSWORD_RESET",
+    required=False,
+    help="Reset password to `admin`. "
+    "This is the same behavior that using ODEV_PASSWORD_RESET env var",
+)
+def main(env, script, script_args, favicon, install, remove, password):
     """ each function names are self explained
     """
+    log_deprecated()
     _check_database(env)
     click.echo("Operations on Odoo database '%s':" % env.cr.dbname)
     inactive_cron(env)
     make_outgoing_mails_safe(env)
     install_uninstall(env)
-    reset_password(env)
-    set_favicon(env)
+    install_uninstall(env, install, remove)
+    reset_password(env, password)
+    set_favicon(env, favicon)
     env.cr.commit()
     # Finally execute script if provided
     if script:

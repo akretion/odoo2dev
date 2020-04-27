@@ -29,9 +29,9 @@ Other operations are optionnal and depends of options or environment vars:
 
 Optionally and depending on the inputs:
   - ODEV_INSTALL: comma-separated list of modules to install
-  - ODEV_UNINSTALL: comma-separated list of modules to uninstall
-  - ODEV_RESET_PASSWORD: boolean flag to reset password to default 'admin'
-  - ODEV_LOGO_PATH: path to the logo (favicon) that should be used
+  - ODEV_REMOVE: comma-separated list of modules to uninstall
+  - ODEV_PASSWORD_RESET: boolean flag to reset password to default 'admin'
+  - ODEV_FAVICON_PATH: path to the favicon logo that should be used
   - execute provided script with [SCRIPT] [SCRIPT_ARGS] or ODEV_SCRIPT env vars
 
 
@@ -68,9 +68,9 @@ Recurrent inputs can be preferably be used with environment variables like below
   # in combination with https://github.com/camptocamp/anthem
   - ODEV_SCRIPT=anthem songs.my-script::main
   - ODEV_INSTALL=web_environment_ribbon,my_other_module
-  - ODEV_UNINSTALL=module_for_prod_only,my_useless_module
-  - ODEV_RESET_PASSWORD=True
-  - ODEV_LOGO_PATH=/my_own_path
+  - ODEV_REMOVE=module_for_prod_only,my_useless_module
+  - ODEV_PASSWORD_RESET=True
+  - ODEV_FAVICON_PATH=/my_own_path
 
 - Execute odoo2dev through **odev** command when needed, typically after database restore, i.e.:
 
@@ -86,17 +86,35 @@ Here is a result example
 
 
 Command-line options:
+
   -c, --config FILE    Specify the Odoo configuration file. Other ways to
                        provide it are with the ODOO_RC or OPENERP_SERVER
                        environment variables, or ~/.odoorc (Odoo >= 10) or
                        ~/.openerp_serverrc.
+
   -d, --database TEXT  Specify the database name. If present, this parameter
                        takes precedence over the database provided in the Odoo
                        configuration file.
+
   --log-level TEXT     Specify the logging level. Accepted values depend on
                        the Odoo version, and include debug, info, warn, error.
                        [default: warn]
+
   --logfile FILE       Specify the log file.
+
+  -f, --favicon TEXT   Apply a favicon to your Odoo instance. Require to make
+                       available `web_favicon` module. This is the same
+                       behavior that using ODEV_FAVICON_PATH env var
+
+  -i, --install TEXT   A comma-separated list of modules to install. This is
+                       the same behavior that using ODEV_INSTALL env var
+
+  -r, --remove TEXT    A comma-separated list of modules to uninstall. This is
+                       the same behavior that using ODEV_REMOVE env var
+
+  -p, --password TEXT  Reset password to `admin` This is the same behavior
+                       that using ODEV_PASSWORD_RESET env var
+
   --help               Show this message and exit.
 
 
