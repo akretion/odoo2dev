@@ -25,7 +25,7 @@ The following operations are executed:
 Always:
   - deactivate crons and outgoing mails
 
-Other operations are optionnal and depends of the inputs (options or env vars):
+Other operations are optionnal and depends of options or environment vars:
 
 Optionally and depending on the inputs:
   - ODEV_INSTALL: comma-separated list of modules to install
@@ -34,7 +34,6 @@ Optionally and depending on the inputs:
   - ODEV_LOGO_PATH: path to the logo (favicon) that should be used
   - execute provided script with [SCRIPT] [SCRIPT_ARGS] or ODEV_SCRIPT / ODEV_SCRIPT_VARS env vars final operation
 
-Inputs are supplied through setting your environment variables.
 
 Install
 -------
@@ -51,13 +50,24 @@ Install this lib in your project with
 Usage
 -----
 
+- You may define a script to executed as last step
+
+.. code-block:: bash
+
+  pg_restore -d my_db my.dump ; odev my-script -d my_db ; odoo
+
+
+Recurrent inputs can be preferably be used with environment variables like below
+
+
 - Set environment variables, for example on your docker-compose file, with key-value pairs:
 
 .. code-block:: yaml
 
   - ODEV_SCRIPT=/odoo/my-script
   # in combination with https://github.com/camptocamp/anthem
-  - ODEV_SCRIPT=anthem songs.my-script::main
+  - ODEV_SCRIPT=anthem
+  - ODEV_SCRIPT_ARGS=songs.my-script::main  # only for anthem
   - ODEV_INSTALL=web_environment_ribbon,my_other_module
   - ODEV_UNINSTALL=module_for_prod_only,my_useless_module
   - ODEV_RESET_PASSWORD=True
@@ -68,15 +78,6 @@ Usage
 .. code-block:: bash
 
   pg_restore -d my_db my.dump ; odev -d my_db ; odoo
-
-Or with script
-
-.. code-block:: bash
-
-  pg_restore -d my_db my.dump ; odev my-script -d my_db ; odoo
-
-
-Recurrent script can be preferably used with environment variables
 
 
 Here is a result example
