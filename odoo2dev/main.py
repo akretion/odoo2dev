@@ -133,7 +133,7 @@ def execute_external_script(env, script, script_args):
     # check if it's an anthem script and trigger it
     if script == "anthem":
         if not script_args:
-            click.echo(click.style("Missing anthem args to be executed", fg="res"))
+            click.echo(click.style("Missing anthem args to be executed", fg="red"))
             return
         process = subprocess.Popen(
             ["anthem", script_args[0]], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
