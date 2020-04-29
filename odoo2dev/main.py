@@ -131,12 +131,11 @@ def execute_external_script(env, script, script_args):
     """
     global_vars = {"env": env}
     # check if it's an anthem script and trigger it
-    if script == "anthem":
-        if not script_args:
-            click.echo(click.style("Missing anthem args to be executed", fg="red"))
-            return
+    if script[:6] == "anthem" and " " in script:
         process = subprocess.Popen(
-            ["anthem", script_args[0]], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            ["anthem", script[6:].strip()],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
         )
         with process.stdout:
             _log_subprocess_output(process.stdout)
@@ -178,10 +177,8 @@ Optionally and depending on the inputs:
 @click_odoo.env_options(
     default_log_level="warn", with_database=True, with_rollback=False
 )
-@click.argument(
-    "script", envvar="ODEV_SCRIPT", required=False,
-)
-@click.argument("script-args", envvar="ODEV_SCRIPT_ARGS", required=False, nargs=-1)
+@click.argument("script", envvar="ODEV_SCRIPT", required=False)
+@click.argument("script-args", required=False, nargs=-1)
 def main(env, script, script_args):
     """ each function names are self explained
     """

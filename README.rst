@@ -32,7 +32,7 @@ Optionally and depending on the inputs:
   - ODEV_UNINSTALL: comma-separated list of modules to uninstall
   - ODEV_RESET_PASSWORD: boolean flag to reset password to default 'admin'
   - ODEV_LOGO_PATH: path to the logo (favicon) that should be used
-  - execute provided script with [SCRIPT] [SCRIPT_ARGS] or ODEV_SCRIPT / ODEV_SCRIPT_VARS env vars final operation
+  - execute provided script with [SCRIPT] [SCRIPT_ARGS] or ODEV_SCRIPT env vars
 
 
 Install
@@ -66,8 +66,7 @@ Recurrent inputs can be preferably be used with environment variables like below
 
   - ODEV_SCRIPT=/odoo/my-script
   # in combination with https://github.com/camptocamp/anthem
-  - ODEV_SCRIPT=anthem
-  - ODEV_SCRIPT_ARGS=songs.my-script::main  # only for anthem
+  - ODEV_SCRIPT=anthem songs.my-script::main
   - ODEV_INSTALL=web_environment_ribbon,my_other_module
   - ODEV_UNINSTALL=module_for_prod_only,my_useless_module
   - ODEV_RESET_PASSWORD=True
