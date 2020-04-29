@@ -5,6 +5,8 @@ import click
 import click_odoo
 from click_odoo import odoo
 import os
+import subprocess
+import runpy
 from psycopg2 import ProgrammingError
 
 
@@ -57,7 +59,7 @@ def set_favicon(env):
                 favicon_backend_mimetype = 'image/png'""",
             (data,),
         )
-        click.echo(click.style(" - Favicon added to companies", fg="green"))
+        click.echo(click.style(" - favicon added to companies", fg="green"))
     else:
         click.echo(click.style("No favicon file", fg="blue"))
 
@@ -124,11 +126,63 @@ def _check_database(env):
         raise click.ClickException(msg)
 
 
-@click.command()
+def execute_external_script(env, script, script_args):
+    """ Script path executed as last operation
+    """
+    global_vars = {"env": env}
+    # check if it's an anthem script and trigger it
+    if script == "anthem":
+        if not script_args:
+            click.echo(click.style("Missing anthem args to be executed", fg="res"))
+            return
+        process = subprocess.Popen(
+            ["anthem", script_args[0]], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        )
+        with process.stdout:
+            _log_subprocess_output(process.stdout)
+        return
+    # or launch as standard python script aka python -m myscript
+    click.echo(click.style(" - script '%s' being executed." % script, fg="green",))
+    if not os.path.isfile(script):
+        raise Exception("Script '%s' is not an accessible file." % script)
+    # TODO use script_args ??
+    return runpy.run_path(script, init_globals=global_vars, run_name="__main__")
+
+
+def _log_subprocess_output(pipe):
+    for line in iter(pipe.readline, b""):  # b'\n'-separated lines
+        line = line.decode("utf-8").rstrip("\n")
+        click.echo(click.style(line, fg="yellow"))
+
+
+@click.command(
+    help="""
+odoo2dev package providing facilities to use a dump of your production database
+in your dev environment.
+
+The following operations are executed:
+
+Always:
+
+  - deactivate crons and outgoing mails
+
+Optionally and depending on the inputs:
+
+  - execute provided script with [SCRIPT] [SCRIPT_ARGS] as final operation \n
+  - install or uninstall a comma-separated list of modules\n
+  - reset password to `admin`\n
+  - apply favicon on odoo instance
+
+"""
+)
 @click_odoo.env_options(
     default_log_level="warn", with_database=True, with_rollback=False
 )
-def main(env):
+@click.argument(
+    "script", envvar="ODEV_SCRIPT", required=False,
+)
+@click.argument("script-args", envvar="ODEV_SCRIPT_ARGS", required=False, nargs=-1)
+def main(env, script, script_args):
     """ each function names are self explained
     """
     _check_database(env)
@@ -139,6 +193,9 @@ def main(env):
     reset_password(env)
     set_favicon(env)
     env.cr.commit()
+    # Finally execute script if provided
+    if script:
+        execute_external_script(env, script, script_args)
 
 
 if __name__ == "__main__":  # pragma: no cover

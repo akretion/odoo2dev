@@ -8,7 +8,7 @@ import setuptools
 
 setuptools.setup(
     name="odoo2dev",
-    version="0.2.2",
+    version="0.3.0",
     author="Akretion",
     author_email="contact@akretion.com",
     license="AGPLv3+",
