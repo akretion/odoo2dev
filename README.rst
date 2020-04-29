@@ -28,11 +28,11 @@ Always:
 Other operations are optionnal and depends of the inputs (options or env vars):
 
 Optionally and depending on the inputs:
-  - execute provided script with [SCRIPT] [SCRIPT_ARGS] or ODEV_SCRIPT env varas final operation
   - ODEV_INSTALL: comma-separated list of modules to install
   - ODEV_UNINSTALL: comma-separated list of modules to uninstall
   - ODEV_RESET_PASSWORD: boolean flag to reset password to default 'admin'
   - ODEV_LOGO_PATH: path to the logo (favicon) that should be used
+  - execute provided script with [SCRIPT] [SCRIPT_ARGS] or ODEV_SCRIPT / ODEV_SCRIPT_VARS env vars final operation
 
 Inputs are supplied through setting your environment variables.
 

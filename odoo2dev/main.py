@@ -142,17 +142,16 @@ def execute_external_script(env, script, script_args):
             _log_subprocess_output(process.stdout)
         return
     # or launch as standard python script aka python -m myscript
-    click.echo(
-        click.style(
-            " - script '%s' being executed." % script, fg="green",
-        )
-    )
+    click.echo(click.style(" - script '%s' being executed." % script, fg="green",))
+    if not os.path.isfile(script):
+        raise Exception("Script '%s' is not an accessible file." % script)
+    # TODO use script_args ??
     return runpy.run_path(script, init_globals=global_vars, run_name="__main__")
 
 
 def _log_subprocess_output(pipe):
     for line in iter(pipe.readline, b""):  # b'\n'-separated lines
-        line = line.decode("utf-8").rstrip('\n')
+        line = line.decode("utf-8").rstrip("\n")
         click.echo(click.style(line, fg="yellow"))
 
 
@@ -182,7 +181,7 @@ Optionally and depending on the inputs:
 @click.argument(
     "script", envvar="ODEV_SCRIPT", required=False,
 )
-@click.argument("script-args", required=False, nargs=-1)
+@click.argument("script-args", envvar="ODEV_SCRIPT_ARGS", required=False, nargs=-1)
 def main(env, script, script_args):
     """ each function names are self explained
     """
