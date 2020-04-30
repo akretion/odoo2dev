@@ -38,10 +38,26 @@ def inactive_cron(env):
         raise e
 
 
-def inactive_mail(env):
+def make_outgoing_mails_safe(env):
     try:
+        # Inactivation
         env.cr.execute("UPDATE ir_mail_server SET active = 'f'")
-        click.echo(click.style(" - outgoing mail servers are inactivated", fg="green"))
+        # Add fake mail server settings, you've to install matching server yourself
+        env.cr.execute(
+            """
+        INSERT INTO ir_mail_server (
+        name, smtp_host, smtp_port, smtp_encryption, active, sequence)
+        VALUES (
+        'Here settings to catch your mails: install mailcatcher or mailhog to use it',
+        'smtp://127.0.0.1', 1025, 'none', 't', 1)
+            """
+        )
+        click.echo(
+            click.style(
+                " - outgoing mail servers are inactivated (except a fake one for test)",
+                fg="green",
+            )
+        )
     except Exception as e:
         raise e
 
@@ -185,7 +201,7 @@ def main(env, script, script_args):
     _check_database(env)
     click.echo("Operations on Odoo database '%s':" % env.cr.dbname)
     inactive_cron(env)
-    inactive_mail(env)
+    make_outgoing_mails_safe(env)
     install_uninstall(env)
     reset_password(env)
     set_favicon(env)
