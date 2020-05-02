@@ -247,7 +247,6 @@ def main(env, script, script_args, favicon, install, remove, password):
     click.echo("Operations on Odoo database '%s':" % env.cr.dbname)
     inactive_cron(env)
     make_outgoing_mails_safe(env)
-    install_uninstall(env)
     install_uninstall(env, install, remove)
     reset_password(env, password)
     set_favicon(env, favicon)
