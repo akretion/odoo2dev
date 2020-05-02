@@ -13,7 +13,7 @@ from psycopg2 import ProgrammingError
 def reset_password(env, password):
     if password:
         env.cr.execute("UPDATE res_users SET password = 'admin'")
-        click.echo(click.style(" - user's password are reset to 'admin'", fg="green"))
+        click.echo(click.style(" - user's passwords are reset to 'admin'", fg="green"))
 
 
 def install_uninstall(env, install, remove):
@@ -139,20 +139,38 @@ def _check_database(env):
         raise click.ClickException(msg)
 
 
+def execute_anthem_script(script, script_args):
+    if script == "anthem" and script_args:
+        cmd, cmd_args = script, script_args[0]
+    elif script[:6] == "anthem" and " " in script:
+        cmd, cmd_args = script[:6], script[6:].strip()
+    else:
+        click.echo(
+            click.style(
+                "Impossible to execute script with these arguments: "
+                "script '%s' args '%s'" % (script, script_args),
+                fg="red",
+            ),
+        )
+        return
+    process = subprocess.Popen(
+        [cmd, cmd_args.strip()], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+    )
+    with process.stdout:
+        _log_subprocess_output(process.stdout)
+    click.echo(
+        click.style("'%s %s' script is executed: " % (cmd, cmd_args), fg="green"),
+    )
+    return
+
+
 def execute_external_script(env, script, script_args):
     """ Script path executed as last operation
     """
     global_vars = {"env": env}
     # check if it's an anthem script and trigger it
-    if script[:6] == "anthem" and " " in script:
-        process = subprocess.Popen(
-            ["anthem", script[6:].strip()],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-        )
-        with process.stdout:
-            _log_subprocess_output(process.stdout)
-        return
+    if script[:6] == "anthem":
+        return execute_anthem_script(script, script_args)
     # or launch as standard python script aka python -m myscript
     click.echo(click.style(" - script '%s' being executed." % script, fg="green",))
     if not os.path.isfile(script):
