@@ -39,6 +39,17 @@ def inactive_cron(env):
 
 
 def make_outgoing_mails_safe(env):
+    env.cr.execute(
+        """
+    SELECT column_name FROM information_schema.columns
+    WHERE table_name='ir_mail_server' and column_name='smtp_host';"""
+    )
+    if not env.cr.fetchall():
+        # in this case smtp fields are not in db, server_env module is probably used
+        click.echo(
+            click.style(" - no outgoing mail servers found to deactivate", fg="green",)
+        )
+        return
     try:
         # Inactivation
         env.cr.execute("UPDATE ir_mail_server SET active = 'f'")
